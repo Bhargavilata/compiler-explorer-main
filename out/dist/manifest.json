@@ -1,0 +1,21 @@
+{
+  "main.css": "main.css",
+  "main.js": "main.js",
+  "main.css.map": "main.css.map",
+  "main.js.map": "main.js.map",
+  "noscript.css": "noscript.css",
+  "noscript.js": "noscript.js",
+  "noscript.css.map": "noscript.css.map",
+  "noscript.js.map": "noscript.js.map",
+  "runtime.js": "runtime.js",
+  "runtime.js.map": "runtime.js.map",
+  "vendor.css": "vendor.css",
+  "vendor.js": "vendor.js",
+  "vendor.css.map": "vendor.css.map",
+  "vendor.js.map": "vendor.js.map",
+  "noscript.scss": "ee87e7fcb588d700111c24d5ada28775.eot",
+  "codicon.css": "b13daaad214ef227a36fefd95d924380.ttf",
+  "editor.worker.js": "editor.worker.js",
+  "editor.worker.js.map": "editor.worker.js.map",
+  "es6-shim.min.js": "es6-shim.min.js"
+}

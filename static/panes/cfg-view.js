@@ -29,6 +29,7 @@ var vis = require('vis');
 var _ = require('underscore');
 var Toggles = require('../toggles');
 var ga = require('../analytics');
+const { Compiler } = require('./compiler');
 
 require('selectize');
 
@@ -37,7 +38,9 @@ function Cfg(hub, container, state) {
     this.eventHub = hub.createEventHub();
     this.domRoot = container.getElement();
     this.domRoot.html($('#cfg').html());
-    this.defaultCfgOutput = {nodes: [{id: 0, shape: 'box', label: 'No Output'}], edges: []};
+    this.isEditorCfg = state.source == 'editor';
+    this.cfgCompileOutput = state.cfgOutput;
+    this.defaultCfgOutput = this.isEditorCfg ? {nodes: this.cfgCompileOutput.nodes, edges: this.cfgCompileOutput.edges} : {nodes: [{id: 0, shape: 'box', label: 'No Output'}], edges: []};
     this.binaryModeSupport = {
         nodes: [{
             id: 0,
@@ -73,8 +76,8 @@ function Cfg(hub, container, state) {
             hierarchical: {
                 enabled: true,
                 direction: 'UD',
-                nodeSpacing: 100,
-                levelSeparation: 150,
+                nodeSpacing: 200,
+                levelSeparation: 50,
             },
         },
         physics: {
@@ -96,9 +99,15 @@ function Cfg(hub, container, state) {
     this.cfgVisualiser = new vis.Network(this.domRoot.find('.graph-placeholder')[0],
         this.defaultCfgOutput, this.networkOpts);
 
+        this.cfgVisualiser.moveTo({
+            position: {x:200, y:200},
+            scale: 1,
+            offset: {x:500, y:450},
+            animation: false
+          })
     this.initButtons(state);
 
-    this.compilerId = state.id;
+    this.compilerId = this.isEditorCfg ? null : state.id;
     this._editorid = state.editorid;
     this._binaryFilter = false;
 
@@ -114,11 +123,12 @@ function Cfg(hub, container, state) {
             this.currentFunc = e.target.value;
             this.showCfgResults({
                 nodes: selectedFn.nodes,
-                edges: selectedFn.edges,
+                edges: selectedFn.edges
             });
             this.cfgVisualiser.selectNodes([selectedFn.nodes[0].id]);
             this.resize();
             this.saveState();
+            this.cfgVisualiser.fit();
         }
     }, this));
 
@@ -207,7 +217,11 @@ Cfg.prototype.initCallbacks = function () {
     this.container.on('destroy', this.close, this);
     this.container.on('resize', this.resize, this);
     this.container.on('shown', this.resize, this);
-    this.eventHub.emit('cfgViewOpened', this.compilerId);
+    if (this.isEditorCfg)
+        this.eventHub.emit('codeCfgViewOpened', this.compilerId);
+    else
+        this.eventHub.emit('cfgViewOpened', this.compilerId);
+
     this.eventHub.emit('requestFilters', this.compilerId);
     this.eventHub.emit('requestCompiler', this.compilerId);
 
@@ -248,8 +262,8 @@ Cfg.prototype.resize = function () {
 };
 
 Cfg.prototype.setTitle = function () {
-    this.container.setTitle(
-        this._compilerName + ' Graph Viewer (Editor #' + this._editorid + ', Compiler #' + this.compilerId + ')');
+    var title = this.isEditorCfg ? 'Graph Viewer (Editor #' + this._editorid : this._compilerName + ' Graph Viewer (Editor #' + this._editorid + ', Compiler #' + this.compilerId + ')';
+    this.container.setTitle(title);
 };
 
 Cfg.prototype.assignLevels = function (data) {
@@ -356,7 +370,10 @@ Cfg.prototype.onCompilerClose = function (compilerId) {
 
 Cfg.prototype.close = function () {
     this.eventHub.unsubscribe();
-    this.eventHub.emit('cfgViewClosed', this.compilerId);
+    if (this.isEditorCfg)
+        this.eventHub.emit('codeCfgViewClosed', this.compilerId);
+    else
+        this.eventHub.emit('cfgViewClosed', this.compilerId);
     this.cfgVisualiser.destroy();
 };
 

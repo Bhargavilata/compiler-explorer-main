@@ -189,13 +189,15 @@ module.exports = {
             componentState: {},
         };
     },
-    getCfgViewWith: function (id, editorid) {
+    getCfgViewWith: function (id, editorid, source, cfgOutput) {
         return {
             type: 'component',
             componentName: 'cfg',
             componentState: {
                 id: id,
                 editorid: editorid,
+                source: source,
+                cfgOutput: cfgOutput
             },
         };
     },

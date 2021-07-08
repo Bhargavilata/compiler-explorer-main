@@ -1,4 +1,30 @@
 .gl_keep.template
+  .urls
+    .card
+      .card-body
+        .urls-container
+          .btn-group.btn-group-sm
+            .input-group.input-group-sm
+              .input-group-prepend
+                button.btn.btn-sm.btn-light.btn-outline-secondary.dropdown-toggle(data-toggle="dropdown" type="button" aria-haspopup="true" aria-expanded="false")
+                  span.current Short
+                ul.dropdown-menu.sources
+                  if storageSolution !== "null"
+                    button.dropdown-item.btn.btn-light(data-bind="Short")
+                      | Short
+                  button.dropdown-item.btn.btn-light(data-bind="Full")
+                    | Full
+              input.form-control.permalink(type="text" placeholder="Loading" readonly size="1024")
+              .input-group-append
+                button.btn.btn-sm.btn-light.btn-outline-secondary.clippy(type="button" data-clipboard-target=".popover .permalink" title="Copy to clipboard")
+                  span.fa.fa-clipboard
+        div
+          | &nbsp;
+        button.btn.btn-sm.btn-light.btn-outline-secondary.shareembed(data-target="#shareembedlink" data-toggle="modal" data-bind="Embed")
+          | Embedded
+      if sharingEnabled
+        .card-footer
+          .socialsharing
 
   #codeEditor
     .top-bar.btn-toolbar.bg-light(role="toolbar" aria-label="Editor toolbar" name="editor-btn-toolbar")
@@ -96,6 +122,9 @@
           button.dropdown-item.btn.btn-sm.btn-light.view-cfg(title="Show Graph Output")
             span.dropdown-icon.fas.fa-exchange-alt
             | Graph output
+          button.dropdown-item.btn.btn-sm.btn-light.view-code-cfg(title="Show code CFG Output")
+            span.dropdown-icon.fa.fa-project-diagram
+            | Show code CFG
       .btn-group.btn-group-sm(role="group")
         button.btn.btn-sm.btn-light.dropdown-toggle.add-tool(type="button" title="Add tool" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Add tooling to this editor and compiler")
           span.fas.fa-screwdriver
@@ -335,7 +364,7 @@
           span.fas.fa-book
           span.hideable &nbsp;Libraries
     .conformance-wrapper
-      table.compiler-list
+      table.compiler-list    
 
   #compiler-selector
     .form-row

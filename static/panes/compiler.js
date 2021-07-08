@@ -48,7 +48,7 @@ require('selectize');
 
 var timingInfo = new timingInfoWidget.TimingInfo();
 
-var OpcodeCache = new LruCache({
+var OpcodeCache = new LruCache({ 
     max: 64 * 1024,
     length: function (n) {
         return JSON.stringify(n).length;
@@ -99,6 +99,7 @@ function Compiler(hub, container, state) {
     this.nextRequest = null;
     this.optViewOpen = false;
     this.cfgViewOpen = false;
+    this.codeCfgViewOpen = false;
     this.wantOptInfo = state.wantOptInfo;
     this.decorations = {};
     this.prevDecorations = [];
@@ -182,6 +183,7 @@ Compiler.prototype.initLangAndCompiler = function (state) {
     var compilerId = state.compiler;
     var result = this.compilerService.processFromLangAndCompiler(langId, compilerId);
     this.compiler = result.compiler;
+    this.compiler.supportsGccDump= true;
     this.currentLangId = result.langId;
     this.updateLibraries();
 };
@@ -236,7 +238,11 @@ Compiler.prototype.initPanerButtons = function () {
     }, this);
 
     var createCfgView = _.bind(function () {
-        return Components.getCfgViewWith(this.id, this.sourceEditorId);
+        return Components.getCfgViewWith(this.id, this.sourceEditorId, 'compiler');
+    }, this);
+
+    var createCodeCfgView = _.bind(function () {
+        return Components.getCfgViewWith(this.id, this.sourceEditorId, 'editor', this.lastResult.cfgResult);
     }, this);
 
     var createExecutor = _.bind(function () {
@@ -317,6 +323,16 @@ Compiler.prototype.initPanerButtons = function () {
         var insertPoint = this.hub.findParentRowOrColumn(this.container) ||
             this.container.layoutManager.root.contentItems[0];
         insertPoint.addChild(createCfgView);
+    }, this));
+
+    this.container.layoutManager
+        .createDragSource(this.codeCfgButton, createCodeCfgView)
+        ._dragListener.on('dragStart', togglePannerAdder);
+
+    this.codeCfgButton.click(_.bind(function () {
+        var insertPoint = this.hub.findParentRowOrColumn(this.container) ||
+            this.container.layoutManager.root.contentItems[0];
+        insertPoint.addChild(createCodeCfgView);
     }, this));
 
     this.container.layoutManager
@@ -668,6 +684,7 @@ Compiler.prototype.getBinaryForLine = function (line) {
 };
 
 Compiler.prototype.setAssembly = function (result, filteredCount) {
+    console.log('inside set assemblt',result);
     var asm = result.asm || fakeAsm('<No output>');
     this.assembly = asm;
     if (!this.outputEditor || !this.outputEditor.getModel()) return;
@@ -760,6 +777,7 @@ function fakeAsm(text) {
 }
 
 Compiler.prototype.onCompileResponse = function (request, result, cached) {
+    console.log('inside onCompileResponse',request,result,cached);
     // Delete trailing empty lines
     if ($.isArray(result.asm)) {
         var indexToDiscard = _.findLastIndex(result.asm, function (line) {
@@ -1029,10 +1047,25 @@ Compiler.prototype.onCfgViewOpened = function (id) {
     }
 };
 
+Compiler.prototype.onCodeCfgViewOpened = function (id) {
+    if (this.id === id) {
+        this.codeCfgButton.prop('disabled', true);
+        this.codeCfgViewOpen = true;
+        this.compile();
+    }
+};
+
 Compiler.prototype.onCfgViewClosed = function (id) {
     if (this.id === id) {
         this.cfgViewOpen = false;
         this.cfgButton.prop('disabled', this.getEffectiveFilters().binary);
+    }
+};
+
+Compiler.prototype.onCodeCfgViewClosed = function (id) {
+    if (this.id === id) {
+        this.codeCfgViewOpen = false;
+        this.codeCfgButton.prop('disabled', this.getEffectiveFilters().binary);
     }
 };
 
@@ -1075,6 +1108,7 @@ Compiler.prototype.initButtons = function (state) {
     this.irButton = this.domRoot.find('.btn.view-ir');
     this.gccDumpButton = this.domRoot.find('.btn.view-gccdump');
     this.cfgButton = this.domRoot.find('.btn.view-cfg');
+    this.codeCfgButton = this.domRoot.find('.btn.view-code-cfg');
     this.executorButton = this.domRoot.find('.create-executor');
     this.libsButton = this.domRoot.find('.btn.show-libs');
 
@@ -1250,6 +1284,7 @@ Compiler.prototype.updateButtons = function () {
     this.astButton.prop('disabled', this.astViewOpen || !this.compiler.supportsAstView);
     this.irButton.prop('disabled', this.irViewOpen || !this.compiler.supportsIrView);
     this.cfgButton.prop('disabled', this.cfgViewOpen || !this.compiler.supportsCfg);
+    this.codeCfgButton.prop('disabled', this.codeCfgViewOpen || !this.compiler.supportsCfg);
     this.gccDumpButton.prop('disabled', this.gccDumpViewOpen || !this.compiler.supportsGccDump);
 
     this.executorButton.prop('disabled', !this.compiler.supportsExecute);

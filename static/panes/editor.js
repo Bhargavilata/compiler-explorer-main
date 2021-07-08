@@ -389,6 +389,7 @@ Editor.prototype.initButtons = function (state) {
     var addCompilerButton = this.domRoot.find('.btn.add-compiler');
     var addExecutorButton = this.domRoot.find('.btn.add-executor');
     this.conformanceViewerButton = this.domRoot.find('.btn.conformance');
+    this.newCfgButton = this.domRoot.find('.btn.view-cfg');
     var addEditorButton = this.domRoot.find('.btn.add-editor');
     var toggleVimButton = this.domRoot.find('#vim-flag');
     var togglePaneAdder = function () {
